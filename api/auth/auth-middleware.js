@@ -1,6 +1,8 @@
 const { JWT_SECRET } = require("../secrets"); // use this secret!
+const User = require('../users/users-model');
 
 const restricted = (req, res, next) => {
+  next();
   /*
     If the user does not provide a token in the Authorization header:
     status 401
@@ -19,6 +21,7 @@ const restricted = (req, res, next) => {
 }
 
 const only = role_name => (req, res, next) => {
+  next();
   /*
     If the user does not provide a token in the Authorization header with a role_name
     inside its payload matching the role_name passed to this function as its argument:
@@ -32,7 +35,19 @@ const only = role_name => (req, res, next) => {
 }
 
 
-const checkUsernameExists = (req, res, next) => {
+const checkUsernameExists = async (req, res, next) => {
+  const { username } = req.body;
+  const user = await User.findBy({ username });
+  if (user.length > 0) {
+    res.json(user);
+    req.user = user;
+    next();
+  } else {
+    next({
+      status: 401,
+      message: "Invalid credentials",
+    })
+  }
   /*
     If the username in req.body does NOT exist in the database
     status 401

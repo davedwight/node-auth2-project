@@ -1,9 +1,9 @@
-const bcrypt = require('bcryptjs');
+const bcrypt = require("bcryptjs");
 const router = require("express").Router();
-const { checkUsernameExists, validateRoleName } = require('./auth-middleware');
+const { checkUsernameExists, validateRoleName } = require("./auth-middleware");
 const { JWT_SECRET } = require("../secrets"); // use this secret!
-const User = require('../users/users-model');
-
+const User = require("../users/users-model");
+const tokenBuilder = require("./token-builder");
 
 router.post("/register", validateRoleName, async (req, res, next) => {
   let user = req.body;
@@ -11,14 +11,15 @@ router.post("/register", validateRoleName, async (req, res, next) => {
   const hash = bcrypt.hashSync(user.password, 8);
 
   user.password = hash;
+  user.role_name = req.role_name;
 
   try {
-    const newUser = await User.add(user)
-    res.status(201).json(newUser)
-  } catch(err) {
-    next(err)
+    const newUser = await User.add(user);
+    res.status(201).json(newUser);
+  } catch (err) {
+    next(err);
   }
-  
+
   /**
     [POST] /api/auth/register { "username": "anna", "password": "1234", "role_name": "angel" }
 
@@ -32,9 +33,22 @@ router.post("/register", validateRoleName, async (req, res, next) => {
    */
 });
 
-
 router.post("/login", checkUsernameExists, (req, res, next) => {
-  next();
+  const { password } = req.body;
+  const { user } = req;
+
+  if (user && bcrypt.compareSync(password, user.password)) {
+    const token = tokenBuilder(user);
+    res.status(200).json({
+      message: `${user.username} is back!`,
+      token,
+    });
+  } else {
+    next({
+      status: 401,
+      message: "Invalid credentials",
+    });
+  }
   /**
     [POST] /api/auth/login { "username": "sue", "password": "1234" }
 

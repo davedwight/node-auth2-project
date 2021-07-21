@@ -9,7 +9,7 @@
 // */
 
 const jwt = require("jsonwebtoken");
-const { jwtSecret } = require("../secrets");
+const { JWT_SECRET } = require("../secrets");
 
 module.exports = function (user) {
   const payload = {
@@ -20,5 +20,5 @@ module.exports = function (user) {
   const options = {
     expiresIn: "1d",
   };
-  return jwt.sign(payload, jwtSecret, options);
+  return jwt.sign(payload, JWT_SECRET, options);
 };

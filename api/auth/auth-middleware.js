@@ -84,21 +84,21 @@ const checkUsernameExists = async (req, res, next) => {
 const validateRoleName = (req, res, next) => {
   const role = req.body.role_name;
 
-  if (!role || role.length < 1) {
+  if (!role || role.trim().length < 1) {
     req.role_name = "student";
     next();
-  } else if (role === "admin") {
+  } else if (role.trim() === "admin") {
     next({
       status: 422,
       message: "Role name can not be admin",
     });
-  } else if (role.length > 32) {
+  } else if (role.trim().length > 32) {
     next({
       status: 422,
       message: "Role name can not be longer than 32 chars",
     });
   } else {
-    req.role_name = role;
+    req.role_name = role.trim();
     next();
   }
 
